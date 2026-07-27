@@ -262,7 +262,7 @@ export default function App() {
         { type: "line", label: "P75",    data: results.p75a,    borderColor: COLORS.p90,    borderWidth: 2,   pointRadius: 0, tension: .4, fill: false, borderDash: [6, 3], order: 1 },
         { type: "line", label: "P50",    data: results.p50a,    borderColor: COLORS.p50,    borderWidth: 2.5, pointRadius: 0, tension: .4, fill: false, order: 0 },
         { type: "line", label: "P5",     data: results.p5a,     borderColor: COLORS.p10,    borderWidth: 2,   pointRadius: 0, tension: .4, fill: false, borderDash: [4, 4], order: 2 },
-        { type: "line", label: "Linear", data: results.linPort, borderColor: COLORS.linear, borderWidth: 2,   pointRadius: 0, tension: 0,  fill: false, borderDash: [8, 4], order: 3 },
+        { type: "line", label: "Fixed return", data: results.linPort, borderColor: COLORS.linear, borderWidth: 2,   pointRadius: 0, tension: 0,  fill: false, borderDash: [8, 4], order: 3 },
       ]},
       options: {
         responsive: true, maintainAspectRatio: false, animation: { duration: 350 },
@@ -287,7 +287,7 @@ export default function App() {
         { type: "line", label: "W-P75",    data: results.w75a,    borderColor: COLORS.p90,    borderWidth: 2,   pointRadius: 0, tension: .4, fill: false, borderDash: [6, 3], order: 1 },
         { type: "line", label: "W-P50",    data: results.w50a,    borderColor: COLORS.p50,    borderWidth: 2.5, pointRadius: 0, tension: .4, fill: false, order: 0 },
         { type: "line", label: "W-P5",     data: results.w5a,     borderColor: COLORS.p10,    borderWidth: 2,   pointRadius: 0, tension: .4, fill: false, borderDash: [4, 4], order: 2 },
-        { type: "line", label: "W-Linear", data: results.linW,    borderColor: COLORS.linear, borderWidth: 2,   pointRadius: 0, tension: 0,  fill: false, borderDash: [8, 4], order: 3 },
+        { type: "line", label: "Fixed return", data: results.linW,    borderColor: COLORS.linear, borderWidth: 2,   pointRadius: 0, tension: 0,  fill: false, borderDash: [8, 4], order: 3 },
       ]},
       options: {
         responsive: true, maintainAspectRatio: false, animation: { duration: 350 },
@@ -364,7 +364,7 @@ export default function App() {
         <div style={{ marginBottom: 14 }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: "#555", marginBottom: 6, textTransform: "uppercase", letterSpacing: ".06em" }}>Simulation mode</div>
           <div style={{ display: "flex", borderRadius: 8, overflow: "hidden", border: "2px solid #1D9E75" }}>
-            {[["independent", "Independent", "Mean + sequence risk"], ["constrained", "Same mean", "Sequence risk only"]].map(([k, lbl, desc], i) => (
+            {[["independent", "Variable return", "Return and sequence both vary"], ["constrained", "Same average return", "Sequence risk only"]].map(([k, lbl, desc], i) => (
               <button key={k} onClick={() => setSimMode(k)} style={{
                 flex: 1, padding: "8px 4px", cursor: "pointer", border: "none",
                 borderRight: i === 0 ? "2px solid #1D9E75" : "none",
@@ -456,8 +456,8 @@ export default function App() {
             <div style={{ fontSize: 11, color: modelMatches ? "#1D9E75" : "#BA7517", marginTop: 4 }}>
               {modelMatches
                 ? (modelRange === "monarch"
-                    ? <>Linked to spreadsheet · CPI+{activeModel.cpiPlusTarget}% target · cost {activeModel.totalEffectiveCost}% · σ {activeModel.volPeriod}{!activeModel.reg28 ? " · Reg 28: No" : ""}</>
-                    : <>Linked to spreadsheet · CPI+{activeModel.cpiPlusTarget}% target · TER {activeModel.ter}% · σ {activeModel.volPeriod}</>)
+                    ? <>Linked to spreadsheet · CPI+{activeModel.cpiPlusTarget}% target · cost {activeModel.totalEffectiveCost}% · {activeModel.volPeriod} volatility{!activeModel.reg28 ? " · Reg 28: No" : ""}</>
+                    : <>Linked to spreadsheet · CPI+{activeModel.cpiPlusTarget}% target · TER {activeModel.ter}% · {activeModel.volPeriod} volatility</>)
                 : <>Customised — differs from {activeModel.name.replace(/^(DNA|Monarch Integrate) /, "")}</>}
             </div>
           )}
@@ -473,15 +473,15 @@ export default function App() {
           })()}
         </div>
 
-        {sRow(simMode === "constrained" ? "Expected return (geo. mean %)" : "Expected return (arith. mean %)", 1, 20, .5, ret, setRet, ret.toFixed(1) + "%")}
+        {sRow(simMode === "constrained" ? "Expected return (compound %/yr)" : "Expected return (average %/yr)", 1, 20, .5, ret, setRet, ret.toFixed(1) + "%")}
         {results && results.avgReturn.p50 != null && (
           <div style={{ fontSize: 11, color: "#888", marginTop: -8, marginBottom: 10 }}>
             {simMode === "constrained"
-              ? <>Geometric mean · median CAGR ≈ <strong style={{ color: "#1D9E75" }}>{results.avgReturn.p50.toFixed(2)}%</strong></>
-              : <>Arithmetic mean · median CAGR ≈ <strong style={{ color: "#1D9E75" }}>{results.avgReturn.p50.toFixed(2)}%</strong> after σ drag</>}
+              ? <>Average return held fixed · median growth ≈ <strong style={{ color: "#1D9E75" }}>{results.avgReturn.p50.toFixed(2)}%</strong> a year</>
+              : <>Typical compound growth ≈ <strong style={{ color: "#1D9E75" }}>{results.avgReturn.p50.toFixed(2)}%</strong> once volatility is allowed for</>}
           </div>
         )}
-        {sRow("Annual volatility / σ (%)", 1, 40, .5, vol, setVol, vol.toFixed(1) + "%")}
+        {sRow("Annual volatility %", 1, 40, .5, vol, setVol, vol.toFixed(1) + "%")}
 
         {hr}
         {secLabel("Other fees")}
@@ -514,7 +514,7 @@ export default function App() {
           <span style={{ fontSize: 15, fontWeight: 700 }}>Monte Carlo forecast</span>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
             <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 6, background: simMode === "constrained" ? "#f0e6fb" : "#f0f0f0", color: simMode === "constrained" ? "#6b21a8" : "#555" }}>
-              {simMode === "constrained" ? "Same mean" : "Independent"}
+              {simMode === "constrained" ? "Same average return · sequence risk only" : "Variable return and sequence risk"}
             </span>
             {lumps.length > 0 && <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 6, background: "#e8f7ef", color: "#1a7a4a" }}>{lumps.length} injection{lumps.length > 1 ? "s" : ""}</span>}
             {contribEsc > 0 && <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 6, background: "#e8f7ef", color: "#1a7a4a" }}>contrib +{contribEsc.toFixed(1)}%/yr</span>}
@@ -530,7 +530,7 @@ export default function App() {
             ["Optimistic (P75)",  results ? fmt(results.p75) : "—", "75th percentile", COLORS.p90,  results ? results.dep.p75 : null,    results ? results.real.p75 : null,    results ? results.avgReturn.p75 : null],
             ["Best case (P95)",   results ? fmt(results.p95) : "—", "95th percentile", COLORS.p95,  results ? results.dep.p95 : null,    results ? results.real.p95 : null,    results ? results.avgReturn.p95 : null],
             ["Conservative (P5)", results ? fmt(results.p5) : "—",  "5th percentile",  COLORS.p10,  results ? results.dep.p5 : null,     results ? results.real.p5 : null,     results ? results.avgReturn.p5 : null],
-            ["Linear projection", results ? fmt(results.linPort ? results.linPort[results.linPort.length - 1] : 0) : "—", "fixed return, no σ", COLORS.linear, results ? results.dep.linear : null, results ? results.real.linear : null, results ? results.avgReturn.linear : null],
+            ["Fixed-return projection", results ? fmt(results.linPort ? results.linPort[results.linPort.length - 1] : 0) : "—", "same return every year, no ups and downs", COLORS.linear, results ? results.dep.linear : null, results ? results.real.linear : null, results ? results.avgReturn.linear : null],
           ].map(([label, value, sub, color, depleteAt, realVal, cagr]) => (
             <div key={label} style={{ flex: 1, minWidth: 80, padding: "10px 12px", borderRight: "1px solid #eee" }}>
               <div style={{ fontSize: 11, color: "#999", marginBottom: 3 }}>{label}</div>
@@ -564,7 +564,7 @@ export default function App() {
         {/* Portfolio chart */}
         <div style={{ padding: "12px 16px 14px" }}>
           <div style={{ fontSize: 12, fontWeight: 600, color: "#444", marginBottom: 8 }}>Portfolio value</div>
-          {legend([[COLORS.p95, "P95 best case", true], [COLORS.p90, "P75 optimistic", true], [COLORS.p50, "P50 median", false], [COLORS.p10, "P5 conservative", true], [COLORS.linear, "Linear (no σ)", true]])}
+          {legend([[COLORS.p95, "P95 best case", true], [COLORS.p90, "P75 optimistic", true], [COLORS.p50, "P50 median", false], [COLORS.p10, "P5 conservative", true], [COLORS.linear, "Fixed return", true]])}
           <div style={{ position: "relative", height: 220 }}><canvas ref={c1Ref} /></div>
         </div>
 
@@ -572,7 +572,7 @@ export default function App() {
         {withdraw > 0 && (
           <div style={{ padding: "12px 16px 14px", borderTop: "1px solid #eee" }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: "#444", marginBottom: 8 }}>Annual income withdrawal</div>
-            {legend([[COLORS.p95, "P95 best case", true], [COLORS.p90, "P75 optimistic", true], [COLORS.p50, "P50 median", false], [COLORS.p10, "P5 conservative", true], [COLORS.linear, "Linear (no σ)", true]])}
+            {legend([[COLORS.p95, "P95 best case", true], [COLORS.p90, "P75 optimistic", true], [COLORS.p50, "P50 median", false], [COLORS.p10, "P5 conservative", true], [COLORS.linear, "Fixed return", true]])}
             <div style={{ position: "relative", height: 200 }}><canvas ref={c2Ref} /></div>
           </div>
         )}
